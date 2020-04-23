@@ -24,6 +24,7 @@ import model.data_structures.ListaEncadenada;
 import model.data_structures.MaxColaCP;
 import model.data_structures.MaxHeapCP;
 import model.data_structures.Ordenamientos;
+import model.data_structures.RedBlackBST;
 import model.data_structures.ArregloDinamico;
 import model.data_structures.Comparendo;
 import model.data_structures.SeparateChainingHT;
@@ -38,11 +39,11 @@ public class Modelo
 	 * Atributos del modelo del mundo
 	 */
 
-	private LinearProbingHT<String ,Comparendo> datosLinearProbing;
-	private SeparateChainingHT<String, Comparendo> datosSeparateChaining;
+	private LinearProbingHT<Date ,Comparendo> datosLinearProbing;
+	private SeparateChainingHT<Date, Comparendo> datosSeparateChaining;
 	private MaxColaCP<Comparendo> maxCola;
 	private MaxHeapCP<Comparendo> heap;
-	private ArregloDinamico<Comparendo>array;
+	private RedBlackBST<Date,Comparendo>redtree;
 
 
 	/**
@@ -55,13 +56,12 @@ public class Modelo
 		datosSeparateChaining= new SeparateChainingHT<>();
 		maxCola = new MaxColaCP<Comparendo>();
 		heap= new MaxHeapCP<Comparendo>();
-		array = new ArregloDinamico<Comparendo>(10000);
+		redtree = new RedBlackBST<Date,Comparendo>();
 	}
 
 
 
 	public Comparendo[] cargarInfo() throws ParseException{
-		String llaveUltimoelemento="";
 		Comparendo []res = new Comparendo[2]; 
 
 		try {
@@ -72,7 +72,7 @@ public class Modelo
 			JsonReader reader;
 
 			List<String> lista = new ArrayList<String>();
-
+			int mayorID= 0;
 			reader = new JsonReader(new FileReader(path));
 			JsonElement elem = JsonParser.parseReader(reader);
 			JsonArray ja = elem.getAsJsonObject().get("features").getAsJsonArray();
@@ -93,25 +93,23 @@ public class Modelo
 
 
 				Comparendo user = new Comparendo(id,fecha,Hora, medio, Clasevehi, tipoServicio, Infraccion, DescInfra, Localidad, Municipio );
-				datosLinearProbing.put(fecha1[0]+Clasevehi+Infraccion, user);
-				datosSeparateChaining.put(fecha1[0]+Clasevehi+Infraccion, user);
+				if(id>=mayorID)mayorID= id;
+				datosLinearProbing.put(fecha, user);
+				datosSeparateChaining.put(fecha, user);
 
-				llaveUltimoelemento = fecha+Clasevehi+Infraccion;
-				array.agregar(user);
 
 			}
-			res[0] = datosLinearProbing.get(darLlavePrimerComparendo());
-			res[1] = datosLinearProbing.get(llaveUltimoelemento);
-			int k=0;
-			Long start = System.currentTimeMillis();
-			while(k<20000){
-				int index = (int) Math.random();
-				Comparendo user = array.darElemento(index);
-				agregarMaxCola(user);
-				agregarMaxHeap(user);
-				k++;
-			}
-			Long finish = System.currentTimeMillis();
+			
+//			int k=0;
+////			Long start = System.currentTimeMillis();
+//			while(k<20000){
+//				int index = (int) Math.random();
+//				Comparendo user = array.darElemento(index);
+//				agregarMaxCola(user);
+//				agregarMaxHeap(user);
+//				k++;
+//			}
+//			Long finish = System.currentTimeMillis();
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -147,35 +145,32 @@ public class Modelo
 		return res;
 
 	}
-	public ArrayList<Comparendo> darComparendosFeClaInfSeparateChaning(String llave){
+	public ArrayList<Comparendo> darComparendosFeClaInfSeparateChaning(Date llave){
 		ArrayList<Comparendo> res = new ArrayList<Comparendo>();
-		ListaEncadenada<String, Comparendo> comparendos = datosSeparateChaining.darListaEncadenadaCompleta(llave);
-		Iterable<String> iterador = comparendos.keys1();
-		Iterator<String> iter = iterador.iterator();
+		ListaEncadenada<Date, Comparendo> comparendos = datosSeparateChaining.darListaEncadenadaCompleta(llave);
+		Iterable<Date> iterador = comparendos.keys1();
+		Iterator<Date> iter = iterador.iterator();
 		while(iter.hasNext()){
-			String nodo2 = iter.next();
+			Date nodo2 = iter.next();
 			res.add(datosSeparateChaining.get(nodo2));
 		}
-		if( res == null)
-			System.out.println("puto");
 		return res;
 	}
 
 	public int darTamaniotablaLinear(){return datosLinearProbing.darTamaniotabla();}
 	public int darNumeroElementosLinear(){return datosLinearProbing.darNumeroElementos();}
 	public int darTamaniotablaSeparate(){return datosSeparateChaining.darTamaniotabla();}
-	public int darTamanioArregloDinamico(){return array.darTamano();}
 	public int darNumeroElementosSeparate(){return datosSeparateChaining.darNumeroElementos();}
 
-	public boolean existeLlaveLinearProbing(String key)
+	public boolean existeLlaveLinearProbing(Date key)
 	{
 		return datosLinearProbing.contains(key);
 	}
 
-	public ArrayList<Comparendo> buscarPorKeyLinearProbing(String key)
+	public ArrayList<Comparendo> buscarPorKeyLinearProbing(Date key)
 	{
 		ArrayList<Comparendo> retorno= new ArrayList<>();
-		LinearProbingHT<String ,Comparendo> copia=datosLinearProbing;
+		LinearProbingHT<Date ,Comparendo> copia=datosLinearProbing;
 		Comparendo actual= copia.get(key);
 		while(actual!=null)
 		{
@@ -258,12 +253,6 @@ public class Modelo
 	public MaxHeapCP<Comparendo> darMaxHeap(){
 		return heap;
 	}
-	public ArregloDinamico<Comparendo> darArreglo(){
-		return array;
-	}
-	public void agregarArregloDinamico(Comparendo multa){
-		array.agregar(multa);
-	}
-	public LinearProbingHT<String ,Comparendo> darDatosLinearProbing(){return datosLinearProbing;}
-	public SeparateChainingHT<String, Comparendo> darDatosSeparateChaining(){return datosSeparateChaining;}
+	public LinearProbingHT<Date ,Comparendo> darDatosLinearProbing(){return datosLinearProbing;}
+	public SeparateChainingHT<Date, Comparendo> darDatosSeparateChaining(){return datosSeparateChaining;}
 }

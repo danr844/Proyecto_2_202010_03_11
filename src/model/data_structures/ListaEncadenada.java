@@ -74,7 +74,7 @@ public class ListaEncadenada <Key extends Comparable<Key>,V> implements ISymbolT
 	    }
 	    
 	    public Iterable<Key> keys1()  {
-	        Cola<Key> queue = new Cola<Key>();
+	        Queue<Key> queue = new Queue<Key>();
 	        for (Node1<Key, V> x = first; x != null; x = x.next)
 	            queue.enqueue( x.key);
 	        return queue;

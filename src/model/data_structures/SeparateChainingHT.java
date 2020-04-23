@@ -83,7 +83,7 @@ public class SeparateChainingHT <K extends Comparable<K>,V extends Comparable<V>
 	
 	public Iterable<K> keys() 
 	{
-        Cola<K> queue = new Cola<K>();
+        Queue<K> queue = new Queue<K>();
         for (int i = 0; i < m; i++) {
             for (K key : st[i].keys())
                 queue.enqueue(key);

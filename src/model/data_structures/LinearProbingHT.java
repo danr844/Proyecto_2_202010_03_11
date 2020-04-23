@@ -107,7 +107,7 @@ public class LinearProbingHT <K ,V > implements IHashTable<K,V>
 	}
 
 	public Iterable<K> keys() {
-		Cola<K> queue = new Cola<K>();
+		Queue<K> queue = new Queue<K>();
 		for (int i = 0; i < m; i++)
 			if (keys[i] != null) queue.enqueue(keys[i]);
 		return queue;
