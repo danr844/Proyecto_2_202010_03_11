@@ -23,11 +23,11 @@ public class MaxHeapCP< T extends Comparable <T>> implements IMaxHeapCP<T>{
 		}
 	}
 
-	public void agregar(T multa, Comparator comparador) {
-		{ 
+	public void agregar(T multa, Comparator comparador) 
+	{
 			array.agregar(multa);;
 			swim(array.darTamano()-1, comparador); 
-		}
+			tamanoCola++;
 
 	}
 
@@ -67,7 +67,7 @@ public class MaxHeapCP< T extends Comparable <T>> implements IMaxHeapCP<T>{
 
 
 
-	public T deleteMax(T objeto, Comparator<T> comparador)
+	public T deleteMax(Comparator<T> comparador)
 	{
 		T max = array.darElemento(1);
 		//máximo es 1

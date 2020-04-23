@@ -7,13 +7,10 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -22,10 +19,10 @@ import com.google.gson.stream.JsonReader;
 import model.data_structures.LinearProbingHT;
 import model.data_structures.ListaEncadenada;
 import model.data_structures.MaxColaCP;
-import model.data_structures.MaxHeapCP;
+import model.data_structures.MaxPQ;
 import model.data_structures.Ordenamientos;
+import model.data_structures.Queue;
 import model.data_structures.RedBlackBST;
-import model.data_structures.ArregloDinamico;
 import model.data_structures.Comparendo;
 import model.data_structures.SeparateChainingHT;
 
@@ -42,8 +39,9 @@ public class Modelo
 	private LinearProbingHT<Date ,Comparendo> datosLinearProbing;
 	private SeparateChainingHT<Date, Comparendo> datosSeparateChaining;
 	private MaxColaCP<Comparendo> maxCola;
-	private MaxHeapCP<Comparendo> heap;
+	private MaxPQ<Comparendo> maxpq;
 	private RedBlackBST<Date,Comparendo>redtree;
+	private static final int numeroImpresiones = 20;
 
 
 	/**
@@ -55,24 +53,19 @@ public class Modelo
 		datosLinearProbing= new LinearProbingHT<>();
 		datosSeparateChaining= new SeparateChainingHT<>();
 		maxCola = new MaxColaCP<Comparendo>();
-		heap= new MaxHeapCP<Comparendo>();
+		maxpq= new MaxPQ<Comparendo>(darComparador("tipoServicio"));
 		redtree = new RedBlackBST<Date,Comparendo>();
 	}
 
 
 
-	public Comparendo[] cargarInfo() throws ParseException{
-		Comparendo []res = new Comparendo[2]; 
-
+	public Comparendo cargarInfo() throws ParseException{
+		Comparendo mayorID1 = null;
 		try {
 			////// tesing
-			Gson gson = new Gson();
-
+			int mayorID= 0;
 			String path = "./data/Comparendos_DEI_2018_Bogotá_D.C_small.geojson";
 			JsonReader reader;
-
-			List<String> lista = new ArrayList<String>();
-			int mayorID= 0;
 			reader = new JsonReader(new FileReader(path));
 			JsonElement elem = JsonParser.parseReader(reader);
 			JsonArray ja = elem.getAsJsonObject().get("features").getAsJsonArray();
@@ -93,58 +86,20 @@ public class Modelo
 
 
 				Comparendo user = new Comparendo(id,fecha,Hora, medio, Clasevehi, tipoServicio, Infraccion, DescInfra, Localidad, Municipio );
-				if(id>=mayorID)mayorID= id;
+				if(id>=mayorID)mayorID1= user;
 				datosLinearProbing.put(fecha, user);
 				datosSeparateChaining.put(fecha, user);
-
-
+				redtree.put(fecha, user);
+				maxpq.insert(user);
 			}
-			
-//			int k=0;
-////			Long start = System.currentTimeMillis();
-//			while(k<20000){
-//				int index = (int) Math.random();
-//				Comparendo user = array.darElemento(index);
-//				agregarMaxCola(user);
-//				agregarMaxHeap(user);
-//				k++;
-//			}
-//			Long finish = System.currentTimeMillis();
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		return res;
+		return mayorID1;
 	}
-	public String darLlavePrimerComparendo(){
-		String res ="";
-		try {
-			////// tesing
-			Gson gson = new Gson();
 
-			String path = "./data/comparendos_dei_2018_small.geojson";
-			JsonReader reader;
-
-			List<String> lista = new ArrayList<String>();
-
-			reader = new JsonReader(new FileReader(path));
-			JsonElement elem = JsonParser.parseReader(reader);
-			JsonElement e = elem.getAsJsonObject().get("features").getAsJsonArray().get(0);
-
-			String fecha= e.getAsJsonObject().get("properties").getAsJsonObject().get("FECHA_HORA").getAsString();
-			String Clasevehi= e.getAsJsonObject().get("properties").getAsJsonObject().get("CLASE_VEHI").getAsString();
-			String Infraccion =e.getAsJsonObject().get("properties").getAsJsonObject().get("INFRACCION").getAsString();
-			res = fecha+Clasevehi+Infraccion;
-
-			System.out.println(Arrays.toString(lista.toArray()));
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return res;
-
-	}
 	public ArrayList<Comparendo> darComparendosFeClaInfSeparateChaning(Date llave){
 		ArrayList<Comparendo> res = new ArrayList<Comparendo>();
 		ListaEncadenada<Date, Comparendo> comparendos = datosSeparateChaining.darListaEncadenadaCompleta(llave);
@@ -155,6 +110,15 @@ public class Modelo
 			res.add(datosSeparateChaining.get(nodo2));
 		}
 		return res;
+	}
+	
+	public Queue<Comparendo> darComparendosGravedad(int M){
+		Queue<Comparendo>queue = new Queue<Comparendo>();
+		for(int i=0; i<M;i++){
+			Comparendo grave = maxpq.delMax();
+			queue.enqueue(grave);
+		}
+		return queue;
 	}
 
 	public int darTamaniotablaLinear(){return datosLinearProbing.darTamaniotabla();}
@@ -202,22 +166,48 @@ public class Modelo
 			return ID;
 
 		}
+		else if(caracteristicaComparable.equals("tipoServicio"))
+		{
+
+			Comparator<Comparendo> tipoServicio = new Comparator<Comparendo>()
+			{
+				@Override
+				public int compare(Comparendo o1, Comparendo o2) 
+				{
+					if(!o1.darTipoServicio().equals("Publico")&&o2.darTipoServicio().equals("Publico"))return -1;
+					else if(o1.darTipoServicio().equals("Publico")&&!o2.darTipoServicio().equals("Publico"))return 1;
+					else if(o1.darTipoServicio().equals(o1.darTipoServicio())){
+						if(o1.darTipoServicio().compareTo(o2.darTipoServicio())<0)return -1;
+						if(o1.darTipoServicio().compareTo(o2.darTipoServicio())>0)return 1;
+						else 
+							return 0;
+					}
+					else if(o1.darTipoServicio().equals("Oficial")&&!o2.darTipoServicio().equals("Publico"))return 1;
+					else if(!o1.darTipoServicio().equals("Publico")&&o2.darTipoServicio().equals("Oficial"))return -1;
+					
+					else
+						return 0;	
+				}
+			};
+			return tipoServicio;
+
+		}
 		else return null;
 	}
 	public Comparendo eliminarMaxCola()
 	{
 		return  (Comparendo) maxCola.deleteMax(darComparadorOBJECTID());
 	}
-	public Comparendo eliminarMaxHeap(Comparendo comparendo)
+	public Comparendo eliminarMaxHeap()
 	{
-		return  (Comparendo) heap.deleteMax(comparendo, darComparadorOBJECTID());
+		return  (Comparendo) maxpq.delMax();
 	}
 
 	public void agregarMaxCola(Comparendo comparendo){
 		maxCola.agregar(comparendo);
 	}
 	public void agregarMaxHeap(Comparendo comparendo){
-		heap.agregar(comparendo, darComparadorOBJECTID());
+		maxpq.insert(comparendo);
 	}
 	public Comparator<Comparendo> darComparadorOBJECTID(){
 
@@ -239,20 +229,11 @@ public class Modelo
 	 * Servicio de consulta de numero de elementos presentes en el modelo 
 	 * @return numero de elementos presentes en el modelo
 	 */
-	public int darTamanoCola()
-	{
-		return maxCola.darNumElementos();
-	}
-	public int darTamanoHeap()
-	{
-		return heap.darNumElementos();
-	}
-	public MaxColaCP<Comparendo> darMaxCola(){
-		return maxCola;
-	}
-	public MaxHeapCP<Comparendo> darMaxHeap(){
-		return heap;
-	}
+	public int darTamanoCola(){return maxCola.darNumElementos();}
+	public int darTamanoMaxPQ(){return maxpq.size();}
+	public int dartamanioRedBLack(){return redtree.giveSize();}
+	public MaxColaCP<Comparendo> darMaxCola(){return maxCola;}
+	public MaxPQ<Comparendo> darMaxPQ(){return maxpq;}
 	public LinearProbingHT<Date ,Comparendo> darDatosLinearProbing(){return datosLinearProbing;}
 	public SeparateChainingHT<Date, Comparendo> darDatosSeparateChaining(){return datosSeparateChaining;}
 }

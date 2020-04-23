@@ -261,6 +261,7 @@ public class RedBlackBST < Key extends Comparable<Key>, Value>{
 			return 0;
 		return h.size;
 	}
+	public int giveSize(){return size;}
 	/**
      * Returns all keys in the symbol table as an {@code Iterable}.
      * To iterate over all of the keys in the symbol table named {@code st},

@@ -112,7 +112,7 @@ public class ArregloDinamico <T extends Comparable<T>> implements IArregloDinami
 		// TODO implementar
 		// Recomendacion: Usar el criterio de comparacion natural (metodo compareTo()) definido en Strings.
 		T retorno=null;
-		for(int i=0; i<elementos.length;i++)
+		for(int i=0; i<tamanoAct;i++)
 		{	
 			if(elementos[i].compareTo( dato)==0)
 			{
