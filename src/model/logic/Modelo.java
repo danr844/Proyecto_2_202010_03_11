@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
@@ -15,15 +16,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-
+import model.data_structures.Comparendo;
 import model.data_structures.LinearProbingHT;
 import model.data_structures.ListaEncadenada;
-import model.data_structures.MaxColaCP;
 import model.data_structures.MaxPQ;
 import model.data_structures.Ordenamientos;
 import model.data_structures.Queue;
 import model.data_structures.RedBlackBST;
-import model.data_structures.Comparendo;
 import model.data_structures.SeparateChainingHT;
 
 /**
@@ -36,11 +35,11 @@ public class Modelo
 	 * Atributos del modelo del mundo
 	 */
 
-	private LinearProbingHT<Date ,Comparendo> datosLinearProbing;
-	private SeparateChainingHT<Date, Comparendo> datosSeparateChaining;
-	private MaxColaCP<Comparendo> maxCola;
-	private MaxPQ<Comparendo> maxpq;
-	private RedBlackBST<Date,Comparendo>redtree;
+	private LinearProbingHT<String ,Comparendo> datosLinearProbing;
+	private SeparateChainingHT<String, Comparendo> datosSeparateChaining;
+	private MaxPQ<Comparendo> maxpqTipoServicio;
+	private MaxPQ<Comparendo> maxpqFecha;
+	private RedBlackBST<String,Comparendo>redtree;
 	private static final int numeroImpresiones = 20;
 
 
@@ -52,9 +51,9 @@ public class Modelo
 	{
 		datosLinearProbing= new LinearProbingHT<>();
 		datosSeparateChaining= new SeparateChainingHT<>();
-		maxCola = new MaxColaCP<Comparendo>();
-		maxpq= new MaxPQ<Comparendo>(darComparador("tipoServicio"));
-		redtree = new RedBlackBST<Date,Comparendo>();
+		maxpqTipoServicio= new MaxPQ<Comparendo>(darComparador("tipoServicio"));
+		maxpqFecha= new MaxPQ<Comparendo>(darComparador("fecha"));
+		redtree = new RedBlackBST<String,Comparendo>();
 	}
 
 
@@ -87,10 +86,11 @@ public class Modelo
 
 				Comparendo user = new Comparendo(id,fecha,Hora, medio, Clasevehi, tipoServicio, Infraccion, DescInfra, Localidad, Municipio );
 				if(id>=mayorID)mayorID1= user;
-				datosLinearProbing.put(fecha, user);
-				datosSeparateChaining.put(fecha, user);
-				redtree.put(fecha, user);
-				maxpq.insert(user);
+				datosLinearProbing.put(fecha1[0], user);
+				datosSeparateChaining.put(fecha1[0], user);
+				redtree.put(fecha1[0], user);
+				maxpqTipoServicio.insert(user);
+				maxpqFecha.insert(user);
 			}
 
 		} catch (IOException e) {
@@ -100,22 +100,22 @@ public class Modelo
 		return mayorID1;
 	}
 
-	public ArrayList<Comparendo> darComparendosFeClaInfSeparateChaning(Date llave){
+	public ArrayList<Comparendo> darComparendosFeClaInfSeparateChaning(String llave){
 		ArrayList<Comparendo> res = new ArrayList<Comparendo>();
-		ListaEncadenada<Date, Comparendo> comparendos = datosSeparateChaining.darListaEncadenadaCompleta(llave);
-		Iterable<Date> iterador = comparendos.keys1();
-		Iterator<Date> iter = iterador.iterator();
+		ListaEncadenada<String, Comparendo> comparendos = datosSeparateChaining.darListaEncadenadaCompleta(llave);
+		Iterable<Comparendo> iterador = comparendos.keys1();
+		Iterator<Comparendo> iter = iterador.iterator();
 		while(iter.hasNext()){
-			Date nodo2 = iter.next();
-			res.add(datosSeparateChaining.get(nodo2));
+			Comparendo nodo2 = iter.next();
+			res.add(nodo2);
 		}
 		return res;
 	}
-	
+
 	public Queue<Comparendo> darComparendosGravedad(int M){
 		Queue<Comparendo>queue = new Queue<Comparendo>();
 		for(int i=0; i<M;i++){
-			Comparendo grave = maxpq.delMax();
+			Comparendo grave = maxpqTipoServicio.delMax();
 			queue.enqueue(grave);
 		}
 		return queue;
@@ -126,15 +126,15 @@ public class Modelo
 	public int darTamaniotablaSeparate(){return datosSeparateChaining.darTamaniotabla();}
 	public int darNumeroElementosSeparate(){return datosSeparateChaining.darNumeroElementos();}
 
-	public boolean existeLlaveLinearProbing(Date key)
+	public boolean existeLlaveLinearProbing(String key)
 	{
 		return datosLinearProbing.contains(key);
 	}
 
-	public ArrayList<Comparendo> buscarPorKeyLinearProbing(Date key)
+	public ArrayList<Comparendo> buscarPorKeyLinearProbing(String key)
 	{
 		ArrayList<Comparendo> retorno= new ArrayList<>();
-		LinearProbingHT<Date ,Comparendo> copia=datosLinearProbing;
+		LinearProbingHT<String ,Comparendo> copia=datosLinearProbing;
 		Comparendo actual= copia.get(key);
 		while(actual!=null)
 		{
@@ -184,7 +184,7 @@ public class Modelo
 					}
 					else if(o1.darTipoServicio().equals("Oficial")&&!o2.darTipoServicio().equals("Publico"))return 1;
 					else if(!o1.darTipoServicio().equals("Publico")&&o2.darTipoServicio().equals("Oficial"))return -1;
-					
+
 					else
 						return 0;	
 				}
@@ -192,22 +192,33 @@ public class Modelo
 			return tipoServicio;
 
 		}
+		else if(caracteristicaComparable.equals("fecha")){
+
+			Comparator<Comparendo> fecha = new Comparator<Comparendo>()
+			{
+				@Override
+				public int compare(Comparendo o1, Comparendo o2) 
+				{
+					if(o1.darFecha().compareTo(o2.darFecha())<0)return -1;
+					else if (o1.darFecha().compareTo(o2.darFecha())>0)
+						return 1;
+					return 0;	
+				}
+			};
+			return fecha;
+
+
+
+		}
 		else return null;
 	}
-	public Comparendo eliminarMaxCola()
-	{
-		return  (Comparendo) maxCola.deleteMax(darComparadorOBJECTID());
-	}
+
 	public Comparendo eliminarMaxHeap()
 	{
-		return  (Comparendo) maxpq.delMax();
-	}
-
-	public void agregarMaxCola(Comparendo comparendo){
-		maxCola.agregar(comparendo);
+		return  (Comparendo) maxpqTipoServicio.delMax();
 	}
 	public void agregarMaxHeap(Comparendo comparendo){
-		maxpq.insert(comparendo);
+		maxpqTipoServicio.insert(comparendo);
 	}
 	public Comparator<Comparendo> darComparadorOBJECTID(){
 
@@ -229,11 +240,74 @@ public class Modelo
 	 * Servicio de consulta de numero de elementos presentes en el modelo 
 	 * @return numero de elementos presentes en el modelo
 	 */
-	public int darTamanoCola(){return maxCola.darNumElementos();}
-	public int darTamanoMaxPQ(){return maxpq.size();}
+	public int darTamanoMaxPQ(){return maxpqTipoServicio.size();}
 	public int dartamanioRedBLack(){return redtree.giveSize();}
-	public MaxColaCP<Comparendo> darMaxCola(){return maxCola;}
-	public MaxPQ<Comparendo> darMaxPQ(){return maxpq;}
-	public LinearProbingHT<Date ,Comparendo> darDatosLinearProbing(){return datosLinearProbing;}
-	public SeparateChainingHT<Date, Comparendo> darDatosSeparateChaining(){return datosSeparateChaining;}
+	public MaxPQ<Comparendo> darMaxPQ(){return maxpqTipoServicio;}
+	public LinearProbingHT<String ,Comparendo> darDatosLinearProbing(){return datosLinearProbing;}
+	public SeparateChainingHT<String, Comparendo> darDatosSeparateChaining(){return datosSeparateChaining;}
+
+	public Queue<String> darComparendosMesDia(int numMes, String Dia) throws ParseException{
+		Queue<String> queue = new Queue<String>();
+		Calendar calendar = Calendar.getInstance();
+
+		int  month = numMes-1; 
+		int year = 2018;
+		int day =0;
+		if(Dia.equals("L"))
+			day= Calendar.MONDAY;
+		else if(Dia.equals("M"))
+			day= Calendar.TUESDAY;
+		else if(Dia.equals("I"))
+			day= Calendar.WEDNESDAY;
+		else if(Dia.equals("J"))
+			day= Calendar.THURSDAY;
+		else if(Dia.equals("V"))
+			day= Calendar.FRIDAY;
+		else if(Dia.equals("S"))
+			day= Calendar.SATURDAY;
+		else if(Dia.equals("D"))
+			day= Calendar.SUNDAY;
+
+		calendar.set(calendar.YEAR, year);
+		calendar.set(calendar.MONTH,month);
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		int MaxDay = calendar.getActualMaximum(calendar.DAY_OF_MONTH);
+
+		for(int i = 1 ; i < MaxDay ; i++)
+		{        
+			calendar.set(Calendar.DAY_OF_MONTH, i);
+			if (calendar.get(Calendar.DAY_OF_WEEK) == day&&calendar.get(Calendar.MONTH) == month) {
+				 String date1 = formatter.format(calendar.getTime());
+				queue.enqueue(date1);
+
+			}
+		}
+		//		SimpleDateFormat formatter = new SimpleDateFormat("yyy-MM-dd");                                    
+		//		Calendar cini = Calendar.getInstance();
+		//		cini.setTime(formatter.parse("2018-"+numMes+"-01"));
+		//		Calendar cfin = Calendar.getInstance();
+		//		cfin.setTime(formatter.parse("2018-"+numMes+"-"+MaxDay));
+		//
+		//		while (!cfin.before(cini)) {
+		//		    if (cini.get(Calendar.DAY_OF_WEEK)) {
+		//		        queue.enqueue(cini.getTime());
+		//		    }
+		//		    cini.add(Calendar.DATE, 1);
+		//		}
+		return queue;
+	}
+
+	public Queue<Comparendo> darComparendosDosfechas(Date fecha2, Date fecha3) {
+		Queue<Comparendo> queue = new Queue<Comparendo>();
+		Iterable<Comparendo>queue2 = maxpqFecha;
+		Iterator<Comparendo> iter = queue2.iterator();
+		while(iter.hasNext()){
+			Comparendo nodo2 = iter.next();
+			if(nodo2.darFecha().compareTo(fecha2)>0&&nodo2.darFecha().compareTo(fecha3)<0){
+				queue.enqueue(nodo2);
+			}
+		}
+
+		return queue;
+	}
 }

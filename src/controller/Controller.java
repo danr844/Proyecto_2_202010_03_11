@@ -2,12 +2,9 @@ package controller;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Scanner;
-
-import model.data_structures.ArregloDinamico;
 import model.data_structures.Comparendo;
 import model.data_structures.Queue;
 import model.logic.Modelo;
@@ -35,8 +32,6 @@ public class Controller {
 	{
 		Scanner lector = new Scanner(System.in);
 		boolean fin = false;
-
-		Integer respuesta = 0;
 
 		while( !fin ){
 			view.printMenu();
@@ -72,6 +67,49 @@ public class Controller {
 				break;
 
 			case 3:
+				view.printMessage("------------------------------------------------------------------------\n Ingrese las fechas que desea usar en el formato yyyy-MM-dd: \n------------------------------------------------------------------------");
+				String fechaS2 = lector.next();
+				SimpleDateFormat parser2 = new SimpleDateFormat("yyyy-MM-dd");
+				Date fecha2 = parser2.parse(fechaS2);
+				String fechaS3 = lector.next();
+				SimpleDateFormat parser3 = new SimpleDateFormat("yyyy-MM-dd");
+				Date fecha3 = parser3.parse(fechaS3);
+				view.printMessage("------------------------------------------------------------------------\n Ingrese la localidad que desea buscar: \n------------------------------------------------------------------------");
+				String localidad = lector.next();
+				Queue<Comparendo>queue1 = modelo.darComparendosDosfechas(fecha2, fecha3);
+				int x =0;
+				while(x<queue1.size()){
+					Comparendo comConFecha = queue1.dequeue();
+					if(localidad.equalsIgnoreCase(comConFecha.darLocalidad()))
+						view.printMessage("ID: "+comConFecha.darID() +"  Infraccion:  "+ comConFecha.darInfraccion()+"    Clase Vehiculo: "+ comConFecha.darClaseVehiculo()+"    Tipo Servicio: "+comConFecha.darTipoServicio()+"  Fecha:   "+comConFecha.darFecha());
+					x++;
+				}
+
+				break;
+			case 4:
+				view.printMessage("------------------------------------------------------------------------\n Ingrese el numero del mes que desea buscar: \n------------------------------------------------------------------------");
+				int mes = lector.nextInt();
+				view.printMessage("------------------------------------------------------------------------\n Ingrese el dia que desea buscar: \n------------------------------------------------------------------------");
+				String dia = lector.next();
+				Iterable<String>queue3=modelo.darComparendosMesDia(mes, dia);
+				Iterator<String>iter3= queue3.iterator();
+				while(iter3.hasNext())
+				{
+					String fechaBuscada = iter3.next();
+					Iterable<Comparendo>queue4=modelo.darDatosSeparateChaining().darListaEncadenadaCompleta(fechaBuscada).getAll(fechaBuscada);
+					Iterator<Comparendo>iter4= queue4.iterator();
+					while(iter4.hasNext())
+					{
+						Comparendo buscado = iter4.next();
+						view.printMessage("ID: "+buscado.darID() +"  Infraccion:  "+ buscado.darInfraccion()+"    Clase Vehiculo: "+ buscado.darClaseVehiculo()+"    Tipo Servicio: "+buscado.darTipoServicio()+"  Fecha:   "+buscado.darFecha());
+					}
+				}
+
+
+
+
+				break;
+			case 5:
 				//				view.printMessage("------------------------------------------------------------------------\n Fecha, Clase Vehiculo e Infraccion en el formato: FechaClaseVehiculoInfraccion: \n------------------------------------------------------------------------");
 				//				String fechavehiculoInfraccion = lector.next();
 				//				ArrayList<Comparendo> res = modelo.darComparendosFeClaInfSeparateChaning(fechavehiculoInfraccion);
@@ -84,54 +122,8 @@ public class Controller {
 				//
 				//					}
 				//				}
+
 				break;
-				//			case 3:
-				//				view.printMessage("------------------------------------------------------------------------\n Ingrese la fecha que desea usar en el formato yyyy/MM/dd: \n------------------------------------------------------------------------");
-				//				String fechaS = lector.next();
-				//				SimpleDateFormat parser = new SimpleDateFormat("yyyy/MM/dd");
-				//				Date fecha = parser.parse(fechaS);
-				//				ArregloDinamico<Comparendo> nuevo = modelo.darComparendosFechaHora(fecha);
-				//				int i =0;
-				//				while(i<nuevo.darTamano()){
-				//					view.printMessage("------------------------------------------------------------------------\n"+nuevo.darElemento(i).darID()+" " +nuevo.darElemento(i).darFecha()+" " +nuevo.darElemento(i).darInfraccion()+" " +nuevo.darElemento(i).darClaseVehiculo()+" " +nuevo.darElemento(i).darTipoServicio()+" " +nuevo.darElemento(i).darLocalidad()+" " +"\n------------------------------------------------------------------------");
-				//					i++;
-				//				}
-				//				view.printMessage("el numero total de comparendos para esta fecha es: "+ nuevo.darTamano()  );
-				//
-				//				break;
-				//
-				//			case 4:
-				//
-				//				view.printMessage("------------------------------------------------------------------------\n Ingrese la infraccion que desea buscar: \n------------------------------------------------------------------------");
-				//				String pInfraccion = lector.next();//m
-				//				Comparendo res1 = modelo.darPrimerComparendoPorInfraccion(pInfraccion);
-				//				if(res1!=null)
-				//					view.printMessage("El primer Comparendo es: "+ res1.darID() +" " + res1.darFecha()+ " "+res1.darInfraccion()+ " "+ " "+ res1.darClaseVehiculo()+" "+res1.darTipoServicio()+" "+res1.darLocalidad()+ "\n---------------------------");
-				//				else
-				//					view.printMessage("No se encontro un comparendo con la infraccion dada");
-				//				break;
-				//
-				//			case 5:
-				//				view.printMessage("------------------------------------------------------------------------\n Ingrese las fechas que desea usar en el formato yyyy/MM/dd: \n------------------------------------------------------------------------");
-				//				String fechaS2 = lector.next();
-				//				SimpleDateFormat parser2 = new SimpleDateFormat("yyyy/MM/dd");
-				//				Date fecha2 = parser2.parse(fechaS2);
-				//				String fechaS3 = lector.next();
-				//				SimpleDateFormat parser3 = new SimpleDateFormat("yyyy/MM/dd");
-				//				Date fecha3 = parser3.parse(fechaS3);
-				//				ArrayList<ArregloDinamico<Comparendo>> nuevo1 = modelo.darComparendosDosfechas(fecha2, fecha3);
-				//				ArregloDinamico<Comparendo> datosFecha1 = nuevo1.get(0);
-				//				ArregloDinamico<Comparendo> datosfecha2 = nuevo1.get(1);
-				//				int j =0;
-				//				view.printMessage("Infraccion     |"+ fecha2 + "      |"+ fecha3);
-				//
-				//				//				while(j<nuevo1.size()){
-				//				//					view.printMessage("------------------------------------------------------------------------\n"+nuevo.darElemento(j).darID()+" " +nuevo.darElemento(j).darFecha()+" " +nuevo.darElemento(j).darInfraccion()+" " +nuevo.darElemento(j).darClaseVehiculo()+" " +nuevo.darElemento(j).darTipoServicio()+" " +nuevo.darElemento(j).darLocalidad()+" " +"\n------------------------------------------------------------------------");
-				//				//					j++;
-				//				//				}
-				//				//				view.printMessage("el numero total de comparendos para esta fecha es: "+ nuevo.darTamano()  );
-				//				//				
-				//				break;
 				//			case 6:
 				//				view.printMessage("------------------------------------------------------------------------\n Ingrese la infraccion que desea buscar: \n------------------------------------------------------------------------");
 				//				String ifraccion2 = lector.next();
@@ -155,19 +147,21 @@ public class Controller {
 				//				}
 				//				break;
 				//
-				//			case 8: 
-				//				view.printMessage("------------------------------------------------------------------------\n Cerrando el programa: \n------------------------------------------------------------------------");
-				//				lector.close();
-				//				fin = true;
+			case 8: 
+				view.printMessage("------------------------------------------------------------------------\n Cerrando el programa: \n------------------------------------------------------------------------");
+				lector.close();
+				fin = true;
 
 			default: 
 				view.printMessage("--------------------------------------------------------------- \n Opcion Invalida !! \n---------------------------------------------------------------");
 				break;
 			}
 		}
-
-
-
-
-	}	
+	}
 }
+		
+
+
+
+
+

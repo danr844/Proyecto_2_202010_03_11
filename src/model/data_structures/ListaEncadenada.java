@@ -38,6 +38,18 @@ public class ListaEncadenada <Key extends Comparable<Key>,V> implements ISymbolT
 		}
 		return null;
 	}
+	public Queue<V> getAll (Key k){
+		Queue<V> queue = new Queue<V>();
+		for(Node1<Key, V> x=first; x!=null; x=x.next)
+		{
+			if(k.equals(x.key))
+			{
+				queue.enqueue(x.val);;
+			}
+		}
+		return queue;
+		
+	}
 	
 	public void put(Key k,V v)
 	{
@@ -73,10 +85,10 @@ public class ListaEncadenada <Key extends Comparable<Key>,V> implements ISymbolT
 	        return x;
 	    }
 	    
-	    public Iterable<Key> keys1()  {
-	        Queue<Key> queue = new Queue<Key>();
+	    public Iterable<V> keys1()  {
+	        Queue<V> queue = new Queue<V>();
 	        for (Node1<Key, V> x = first; x != null; x = x.next)
-	            queue.enqueue( x.key);
+	            queue.enqueue( x.val);
 	        return queue;
 	    }
 

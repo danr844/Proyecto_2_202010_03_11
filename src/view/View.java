@@ -14,9 +14,9 @@ public class View
 	    public void printMenu()
 		{
 			System.out.println("1. Carga de datos");
-			System.out.println("2. Requerimiento funcional 1");
-			System.out.println("3. Requerimiento funcional 2");
-			System.out.println("4. Requerimiento funcional 3");
+			System.out.println("2. Comparendos por gravedad");
+			System.out.println("3. Comparendos en dos fechas con Localidad");
+			System.out.println("4. Comparendos en un mes según día definido");
 			System.out.println("5. Exit");
 			System.out.println("------------------------------------------------------------------------");
 			System.out.println("Dar el numero de opcion a resolver, luego oprimir tecla Return: (e.g., 1):");
