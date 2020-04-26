@@ -9,11 +9,11 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 import model.data_structures.Comparendo;
-import model.data_structures.MaxColaCP;
+import model.data_structures.MaxPQ;
 
 public class TestMaxColaCP 
 {
-	private MaxColaCP<Comparendo> Cola;
+	private MaxPQ<Comparendo> Cola;
 	private String fechaS;
 	private String fechaS2;
 	private Comparendo nueva;
@@ -24,7 +24,7 @@ public class TestMaxColaCP
 
 	@Before
 	public void setUp1() throws ParseException {
-		Cola = new 	MaxColaCP<Comparendo>();
+		Cola = new 	MaxPQ<Comparendo>(darComparadorOBJECTID());
 		fechaS = "2018/01/17";
 		fechaS2 = "2018/01/18";
 
@@ -32,10 +32,10 @@ public class TestMaxColaCP
 		Date fecha = parser.parse(fechaS);
 		Date fecha2 = parser.parse(fechaS2);
 
-		nueva = new Comparendo(1234, fecha, "hola2", "hola3", "hola4", "hola5", "hola", "hola7", "Barrios Unidos", "Chia");
-		nueva2 = new Comparendo(0000, fecha2, "0009", "0008", "0007", "0006", "0005", "0004", "Fontibon", "Mosquera");
-		Cola.agregar(nueva);
-		Cola.agregar(nueva2);
+		nueva = new Comparendo(1234, fecha, "hola2", "hola3", "hola4", "hola5", "hola", "hola7", "Barrios Unidos", "Chia",0,0, 0 );
+		nueva2 = new Comparendo(0000, fecha2, "0009", "0008", "0007", "0006", "0005", "0004", "Fontibon", "Mosquera",0,0, 0);
+		Cola.insert(nueva);
+		Cola.insert(nueva2);
 	}
 
 	public void setUp2() {
@@ -64,22 +64,22 @@ public class TestMaxColaCP
 	{
 		setUp1();
 		// TODO
-		assertEquals("No es el elemento esperado",1234 , Cola.darMax(darComparadorOBJECTID()).darID());
+		assertEquals("No es el elemento esperado",1234 , Cola.delMax().darID());
 
 	}
 	@Test
 	public void borrarElemento() throws ParseException{
 		setUp1();
-		Cola.deleteMax(darComparadorOBJECTID());
-		assertEquals("No se encontro el elemento esperado", 0000, Cola.darMax(darComparadorOBJECTID()).darID());
+		Cola.delMax();
+		assertEquals("No se encontro el elemento esperado", 0000, Cola.delMax().darID());
 	}
 	@Test
 	public void agregarElemento() throws ParseException{
 		setUp1();
 		Date fecha3 = parser.parse(fechaS);
-		Comparendo nueva3 = new Comparendo(9999, fecha3, "hola2", "hola3", "hola4", "hola5", "hola", "hola7", "Barrios Unidos", "Chia");
-		Cola.agregar(nueva3);
-		assertEquals(9999, Cola.darMax(darComparadorOBJECTID()).darID());
+		Comparendo nueva3 = new Comparendo(9999, fecha3, "hola2", "hola3", "hola4", "hola5", "hola", "hola7", "Barrios Unidos", "Chia", 0, 0, 0);
+		Cola.insert(nueva3);
+		assertEquals(9999, Cola.delMax().darID());
 				
 	}
 
