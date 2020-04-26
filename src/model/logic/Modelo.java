@@ -17,10 +17,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import model.data_structures.Comparendo;
-import model.data_structures.LinearProbingHT;
+import model.data_structures.Haversine;
 import model.data_structures.ListaEncadenada;
 import model.data_structures.MaxPQ;
-import model.data_structures.Ordenamientos;
 import model.data_structures.Queue;
 import model.data_structures.RedBlackBST;
 import model.data_structures.SeparateChainingHT;
@@ -35,12 +34,15 @@ public class Modelo
 	 * Atributos del modelo del mundo
 	 */
 
-	private LinearProbingHT<String ,Comparendo> datosLinearProbing;
 	private SeparateChainingHT<String, Comparendo> datosSeparateChaining;
+	private SeparateChainingHT<String , Comparendo> HashMCTLoc;
 	private MaxPQ<Comparendo> maxpqTipoServicio;
 	private MaxPQ<Comparendo> maxpqFecha;
-	private RedBlackBST<String,Comparendo>redtree;
+	private RedBlackBST<Double,Comparendo>redtreeFechaLatitud;
 	private static final int numeroImpresiones = 20;
+	private static final double latitudTombos = 4.647586;
+	private static final double longitudTombos =-74.078122;
+
 
 
 	/**
@@ -49,11 +51,11 @@ public class Modelo
 	 */
 	public Modelo()
 	{
-		datosLinearProbing= new LinearProbingHT<>();
 		datosSeparateChaining= new SeparateChainingHT<>();
 		maxpqTipoServicio= new MaxPQ<Comparendo>(darComparador("tipoServicio"));
 		maxpqFecha= new MaxPQ<Comparendo>(darComparador("fecha"));
-		redtree = new RedBlackBST<String,Comparendo>();
+		redtreeFechaLatitud = new RedBlackBST<Double,Comparendo>();
+		HashMCTLoc= new SeparateChainingHT<>();
 	}
 
 
@@ -82,15 +84,24 @@ public class Modelo
 				String DescInfra=e.getAsJsonObject().get("properties").getAsJsonObject().get("DES_INFRACCION").getAsString();
 				String Localidad = e.getAsJsonObject().get("properties").getAsJsonObject().get("LOCALIDAD").getAsString();
 				String Municipio = e.getAsJsonObject().get("properties").getAsJsonObject().get("MUNICIPIO").getAsString();
+				double latitud = 0;
+				double longitud=0;
+				double distancia =0;
+				if(e.getAsJsonObject().has("geometry") && !e.getAsJsonObject().get("geometry").isJsonNull())
+				{
+					JsonArray geoElem = e.getAsJsonObject().get("geometry").getAsJsonObject().get("coordinates").getAsJsonArray();
+					latitud=geoElem.get(0).getAsDouble();
+					longitud=geoElem.get(1).getAsDouble();
+					distancia = Haversine.distance(latitud, longitud, latitudTombos,longitudTombos);
+				}
 
-
-				Comparendo user = new Comparendo(id,fecha,Hora, medio, Clasevehi, tipoServicio, Infraccion, DescInfra, Localidad, Municipio );
+				Comparendo user = new Comparendo(id,fecha,Hora, medio, Clasevehi, tipoServicio, Infraccion, DescInfra, Localidad, Municipio, latitud, longitud, distancia );
 				if(id>=mayorID)mayorID1= user;
-				datosLinearProbing.put(fecha1[0], user);
 				datosSeparateChaining.put(fecha1[0], user);
-				redtree.put(fecha1[0], user);
+				redtreeFechaLatitud.put(latitud, user);
 				maxpqTipoServicio.insert(user);
 				maxpqFecha.insert(user);
+				HashMCTLoc.put(medio+Clasevehi+tipoServicio+Localidad,user);
 			}
 
 		} catch (IOException e) {
@@ -121,32 +132,8 @@ public class Modelo
 		return queue;
 	}
 
-	public int darTamaniotablaLinear(){return datosLinearProbing.darTamaniotabla();}
-	public int darNumeroElementosLinear(){return datosLinearProbing.darNumeroElementos();}
 	public int darTamaniotablaSeparate(){return datosSeparateChaining.darTamaniotabla();}
 	public int darNumeroElementosSeparate(){return datosSeparateChaining.darNumeroElementos();}
-
-	public boolean existeLlaveLinearProbing(String key)
-	{
-		return datosLinearProbing.contains(key);
-	}
-
-	public ArrayList<Comparendo> buscarPorKeyLinearProbing(String key)
-	{
-		ArrayList<Comparendo> retorno= new ArrayList<>();
-		LinearProbingHT<String ,Comparendo> copia=datosLinearProbing;
-		Comparendo actual= copia.get(key);
-		while(actual!=null)
-		{
-			retorno.add(actual);
-			copia.delete(key);
-			actual=copia.get(key);
-		}	
-		Ordenamientos.sortMerge(retorno, 0,retorno.size()-1);
-
-		return retorno;
-	}
-
 	public Comparator<Comparendo> darComparador(String caracteristicaComparable){
 
 		if(caracteristicaComparable.equals("ID"))
@@ -174,17 +161,16 @@ public class Modelo
 				@Override
 				public int compare(Comparendo o1, Comparendo o2) 
 				{
-					if(!o1.darTipoServicio().equals("Publico")&&o2.darTipoServicio().equals("Publico"))return -1;
-					else if(o1.darTipoServicio().equals("Publico")&&!o2.darTipoServicio().equals("Publico"))return 1;
-					else if(o1.darTipoServicio().equals(o1.darTipoServicio())){
-						if(o1.darTipoServicio().compareTo(o2.darTipoServicio())<0)return -1;
-						if(o1.darTipoServicio().compareTo(o2.darTipoServicio())>0)return 1;
+					if(!o1.darTipoServicio().equals("Público")&&o2.darTipoServicio().equals("Público"))return -1;
+					else if(o1.darTipoServicio().equals("Público")&&!o2.darTipoServicio().equals("Público"))return 1;
+					else if(o1.darTipoServicio().equals("Oficial")&&!o2.darTipoServicio().equals("Público"))return 1;
+					else if(!o1.darTipoServicio().equals("Público")&&o2.darTipoServicio().equals("Oficial"))return -1;
+					else if(o1.darTipoServicio().equals(o2.darTipoServicio())){
+						if(o1.darInfraccion().compareTo(o2.darInfraccion())<0)return 1;
+						if(o1.darInfraccion().compareTo(o2.darInfraccion())>0)return -1;
 						else 
 							return 0;
 					}
-					else if(o1.darTipoServicio().equals("Oficial")&&!o2.darTipoServicio().equals("Publico"))return 1;
-					else if(!o1.darTipoServicio().equals("Publico")&&o2.darTipoServicio().equals("Oficial"))return -1;
-
 					else
 						return 0;	
 				}
@@ -192,7 +178,8 @@ public class Modelo
 			return tipoServicio;
 
 		}
-		else if(caracteristicaComparable.equals("fecha")){
+		else if(caracteristicaComparable.equals("fecha"))
+		{
 
 			Comparator<Comparendo> fecha = new Comparator<Comparendo>()
 			{
@@ -206,8 +193,22 @@ public class Modelo
 				}
 			};
 			return fecha;
+		}
+		else if(caracteristicaComparable.equals("distancia"))
+		{
 
-
+			Comparator<Comparendo> distancia = new Comparator<Comparendo>()
+			{
+				@Override
+				public int compare(Comparendo o1, Comparendo o2) 
+				{
+					if(o1.darDistancia()<o2.darDistancia())return -1;
+					else if (o1.darDistancia()>o2.darDistancia())
+						return 1;
+					return 0;
+				}
+			};
+			return distancia;
 
 		}
 		else return null;
@@ -241,10 +242,19 @@ public class Modelo
 	 * @return numero de elementos presentes en el modelo
 	 */
 	public int darTamanoMaxPQ(){return maxpqTipoServicio.size();}
-	public int dartamanioRedBLack(){return redtree.giveSize();}
+	public int dartamanioRedBLack(){return redtreeFechaLatitud.giveSize();}
 	public MaxPQ<Comparendo> darMaxPQ(){return maxpqTipoServicio;}
-	public LinearProbingHT<String ,Comparendo> darDatosLinearProbing(){return datosLinearProbing;}
 	public SeparateChainingHT<String, Comparendo> darDatosSeparateChaining(){return datosSeparateChaining;}
+
+
+	public MaxPQ<Comparendo> darMasCercano(int numImpresiones){
+		MaxPQ<Comparendo> nueva =new MaxPQ <Comparendo> (darComparador("distancia"));
+		for(int i=0; i<maxpqFecha.size()&&i<numImpresiones;i++){
+			nueva.insert(maxpqFecha.delMax());;
+		}
+		return nueva ;
+	}
+
 
 	public Queue<String> darComparendosMesDia(int numMes, String Dia) throws ParseException{
 		Queue<String> queue = new Queue<String>();
@@ -277,24 +287,18 @@ public class Modelo
 		{        
 			calendar.set(Calendar.DAY_OF_MONTH, i);
 			if (calendar.get(Calendar.DAY_OF_WEEK) == day&&calendar.get(Calendar.MONTH) == month) {
-				 String date1 = formatter.format(calendar.getTime());
+				String date1 = formatter.format(calendar.getTime());
 				queue.enqueue(date1);
 
 			}
 		}
-		//		SimpleDateFormat formatter = new SimpleDateFormat("yyy-MM-dd");                                    
-		//		Calendar cini = Calendar.getInstance();
-		//		cini.setTime(formatter.parse("2018-"+numMes+"-01"));
-		//		Calendar cfin = Calendar.getInstance();
-		//		cfin.setTime(formatter.parse("2018-"+numMes+"-"+MaxDay));
-		//
-		//		while (!cfin.before(cini)) {
-		//		    if (cini.get(Calendar.DAY_OF_WEEK)) {
-		//		        queue.enqueue(cini.getTime());
-		//		    }
-		//		    cini.add(Calendar.DATE, 1);
-		//		}
 		return queue;
+	}
+	public Queue<Comparendo> darComparendosMedioClaseTipoLoca(String medio, String clase, String tipo, String Localidad ){
+		return  HashMCTLoc.darListaEncadenadaCompleta(medio+clase+tipo+Localidad).getAll(medio+clase+tipo+Localidad);
+	}
+	public Iterable<Comparendo> darComparendosRangoLatitud(double lo, double hi){
+		return redtreeFechaLatitud.keysValue(lo, hi);
 	}
 
 	public Queue<Comparendo> darComparendosDosfechas(Date fecha2, Date fecha3) {

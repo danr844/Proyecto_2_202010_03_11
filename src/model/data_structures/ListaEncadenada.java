@@ -93,10 +93,13 @@ public class ListaEncadenada <Key extends Comparable<Key>,V> implements ISymbolT
 	    }
 
 		@Override
-		public Iterable<Key> keys() {
-			// TODO Auto-generated method stub
-			return null;
-		}
+		public Iterable<Key> keys()  {
+	        Queue<Key> queue = new Queue<Key>();
+	        for (Node1<Key, V> x = first; x != null; x = x.next)
+	            queue.enqueue( x.key);
+	        return queue;
+	    }
+
 
 
 }

@@ -152,7 +152,10 @@ public class MaxPQ<Key> implements Iterable<Key> {
         }
         pq = temp;
     }
-
+    public Key[] givePq(){
+    	return pq; 
+    }
+    
 
     /**
      * Adds a new key to this priority queue.
@@ -287,8 +290,11 @@ public class MaxPQ<Key> implements Iterable<Key> {
             return copy.delMax();
         }
     }
-
- 
+//    public void sort(Comparator comparador){
+//    	Ordenamientos.Quicksort(pq, comparador);
+//    }
+//
+// 
 }
 
 /******************************************************************************

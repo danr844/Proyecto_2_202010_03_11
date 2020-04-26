@@ -293,6 +293,15 @@ public class RedBlackBST < Key extends Comparable<Key>, Value>{
         keys(root, queue, lo, hi);
         return queue;
     } 
+    public Iterable<Value> keysValue(Key lo, Key hi) {
+        if (lo == null) throw new IllegalArgumentException("first argument to keys() is null");
+        if (hi == null) throw new IllegalArgumentException("second argument to keys() is null");
+
+        Queue<Value> queue = new Queue<Value>();
+        // if (isEmpty() || lo.compareTo(hi) > 0) return queue;
+        keysValue(root, queue, lo, hi);
+        return queue;
+    } 
     public double heightProm(){
     	return heightProm(root)/size;
     	
@@ -313,4 +322,12 @@ public class RedBlackBST < Key extends Comparable<Key>, Value>{
         if (cmplo <= 0 && cmphi >= 0) queue.enqueue(x.key); 
         if (cmphi > 0) keys(x.right, queue, lo, hi); 
     } 
+    private void keysValue(NodoRedBlack<Key, Value> x, Queue<Value> queue, Key lo, Key hi) { 
+        if (x == null) return; 
+        int cmplo = lo.compareTo(x.key); 
+        int cmphi = hi.compareTo(x.key); 
+        if (cmplo < 0) keysValue(x.left, queue, lo, hi); 
+        if (cmplo <= 0 && cmphi >= 0) queue.enqueue(x.val); 
+        if (cmphi > 0) keysValue(x.right, queue, lo, hi); 
+    }
 }

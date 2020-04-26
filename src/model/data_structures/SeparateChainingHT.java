@@ -68,35 +68,38 @@ public class SeparateChainingHT <K extends Comparable<K>,V extends Comparable<V>
 			n++;
 		st[hash(key)].put(key, val);
 	}
-	
+
 	public V delete(K key) 
 	{
 		if (m > INIT_CAPACITY && n <= m/8) 
 			resize(m/2);
-		
-        if (st[hash(key)].contains(key))
-        	n--;
-        return st[hash(key)].delete(key);
 
-        // halve table size if average length of list <= 2
-    } 
-	
+		if (st[hash(key)].contains(key))
+			n--;
+		return st[hash(key)].delete(key);
+
+		// halve table size if average length of list <= 2
+	} 
+
 	public Iterable<K> keys() 
 	{
-        Queue<K> queue = new Queue<K>();
-        for (int i = 0; i < m; i++) {
-            for (K key : st[i].keys())
-                queue.enqueue(key);
-        }
-        return queue;
-    } 
+		Queue<K> queue = new Queue<K>();
+		for (int i = 1; i < m; i++) {
+			if(st[i].keys()!=null){
+				for (K key : st[i].keys())
+					queue.enqueue(key);
+			}
+		}
+		return queue;
+	} 
+	
 	public ListaEncadenada<K, V> darListaEncadenadaCompleta(K Key){
 		return st[hash(Key)];
 	}
 	public int darTamaniotabla(){return m;}
 	public int darNumeroElementos(){return n;}
 
-	
+
 }
 
 

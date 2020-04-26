@@ -13,11 +13,15 @@ public class Comparendo implements Comparable<Comparendo> {
 	private String DESC_INFRACCION;
 	private String MEDIO;
 	private String MUNICIPIO;
-	private Comparendo siguiente;
+	private double latitud;
+	private double longitud;
+	private double distancia;
+	private boolean inmovilizado;
+	private boolean suspendido;
 
 //m
 
-	public Comparendo (int pOBJECT_ID, Date pFECHA, String pHORA, String pMedioDeteccion, String pClasevehiculo,String pTIPO_SERVICIO, String pInfraccion, String pDescInfraccion,  String pLOCALIDAD, String pMUNICIPIO)
+	public Comparendo (int pOBJECT_ID, Date pFECHA, String pHORA, String pMedioDeteccion, String pClasevehiculo,String pTIPO_SERVICIO, String pInfraccion, String pDescInfraccion,  String pLOCALIDAD, String pMUNICIPIO, double pLatitud, double pLongitud, double pDistancia)
 	{
 		OBJECT_ID = pOBJECT_ID;
 		FECHA= pFECHA;
@@ -29,17 +33,18 @@ public class Comparendo implements Comparable<Comparendo> {
 		LOCALIDAD= pLOCALIDAD;
 		DESC_INFRACCION = pDescInfraccion;
 		MUNICIPIO = pMUNICIPIO;
-
+		latitud =pLatitud;
+		longitud  = pLongitud;
+		distancia = pDistancia;
+		if(DESC_INFRACCION.contains("SERÁ INMOVILIZADO")||DESC_INFRACCION.contains("SERA INMOVILIZADO"))
+		inmovilizado=true;
+		else
+			inmovilizado=false;
+		if(DESC_INFRACCION.contains("LICENCIA DE CONDUCCIÓN")||DESC_INFRACCION.contains("LICENCIA DE CONDUCCION"))
+			suspendido=true;
+			else
+				suspendido=false;
 	}
-	public Comparendo darSiguiente()
-	{
-		return siguiente;
-	}
-	public void cambiarSiguiente(Comparendo pSiguiente)
-	{
-		siguiente = pSiguiente;
-	}
-
 	public int darID(){
 		return OBJECT_ID;
 	}
@@ -70,6 +75,20 @@ public class Comparendo implements Comparable<Comparendo> {
 	public String darMunicipio(){
 		return MUNICIPIO;
 	}
+	public double darlatitud(){
+		return latitud;
+	}
+	public double darLongitud(){
+		return longitud;
+	}
+	public double darDistancia(){
+		return distancia;
+	}
+	public void cambiarDistancia(double newDistancia){
+		distancia = newDistancia;
+	}
+	public boolean esInmovilizado(){return inmovilizado;}
+	public boolean esSuspendido(){return suspendido;}
 	@Override
 	public int compareTo(Comparendo pComparendo) {
 		// TODO Auto-generated method stu
